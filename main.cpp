@@ -32,6 +32,7 @@
 #include "Level3.h"
 #include "LoseScene.h"
 #include "WinScene.h"
+#include "Effects.h"
 
 #include <vector>
 #include <cstdlib>
@@ -79,9 +80,12 @@ LoseScene* g_lose_scene;
 
 Scene* g_levels[6];
 
+// ————— OTHER VARIABLES ————— //
 int lives;
-
 GLuint heart_texture_id;
+
+float global_timer = 180.0f;
+bool game_timeout = false;
 
 void switch_to_scene(Scene* scene)
 {
@@ -250,10 +254,22 @@ void process_input()
 
                     Mix_PlayChannel(-1, state.beam_sfx, 0); // Play beam sound effect
                 }
+            case SDLK_2:
+                if (g_current_scene == g_menu)
+                {
+                    switch_to_scene(g_level2);
+                }
+                break;
             case SDLK_3:
 				if (g_current_scene == g_menu)
 				{
 					switch_to_scene(g_level3);
+				}
+				break;
+            case SDLK_5:
+				if (g_current_scene == g_menu)
+				{
+					switch_to_scene(g_win_scene);
 				}
 				break;
             default: break;
@@ -288,6 +304,16 @@ void update()
     float ticks = (float)SDL_GetTicks() / MILLISECONDS_IN_SECOND;
     float delta_time = ticks - g_previous_ticks;
     g_previous_ticks = ticks;
+
+    if (!game_timeout && g_current_scene != g_menu && g_current_scene != g_win_scene && g_current_scene != g_lose_scene) 
+    {
+        global_timer -= FIXED_TIMESTEP;
+        if (global_timer <= 0.0f) 
+        {
+            game_timeout = true;
+            switch_to_scene(g_lose_scene);
+        }
+    }
 
     // ————— FIXED TIMESTEP ————— //
     delta_time += g_time_accumulator;
@@ -356,9 +382,30 @@ void render()
 
     g_current_scene->render(&g_shader_program);
 
-    if (g_current_scene->get_state().player != nullptr && g_current_scene != g_win_scene && g_current_scene != g_lose_scene) { // Render hearts
+    if (g_current_scene->get_state().player != nullptr && g_current_scene != g_win_scene && g_current_scene != g_lose_scene) 
+    { // Render hearts
         int current_lives = g_current_scene->get_state().player->get_lives();
         render_hearts(&g_shader_program, heart_texture_id, current_lives);
+    }
+
+    if (g_current_scene != g_menu && g_current_scene != g_win_scene && g_current_scene != g_lose_scene)
+    {
+        float minutes = floor(global_timer / 60.0f);
+        float seconds = fmod(global_timer, 60.0f);
+
+        char buffer[20];
+        snprintf(buffer, sizeof(buffer), "%02.0f:%02.0f", minutes, seconds);
+
+        // Reset to UI space
+        glm::mat4 ui_view_matrix = glm::mat4(1.0f);
+        g_shader_program.set_view_matrix(ui_view_matrix);
+
+        // Draw timer at top-left
+        glm::vec3 timer_position(-4.8f, 3.5f, 0.0f);
+        Utility::draw_text(&g_shader_program, Utility::load_texture("assets/font_sprite.png"), buffer, 0.4f, 0.1f, timer_position);
+
+        // Restore view matrix
+        g_shader_program.set_view_matrix(g_view_matrix);
     }
 
     SDL_GL_SwapWindow(g_display_window);
@@ -378,7 +425,6 @@ int main(int argc, char* argv[])
 
     while (g_app_status == RUNNING)
     {
-
         process_input();
         update();
         render();

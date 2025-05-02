@@ -3,7 +3,7 @@
 
 class Level2Scene : public Scene {
 public:
-    static constexpr int ENEMY_COUNT = 7;
+    static constexpr int ENEMY_COUNT = 8;
 
     ~Level2Scene();
 

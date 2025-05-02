@@ -1,4 +1,4 @@
-/**
+﻿/**
 * Author: Edrick Linardi
 * Assignment: Space Blaster
 * Date due: 2025-05-02, 2:00pm
@@ -64,7 +64,7 @@ void Level2Scene::initialise()
     );
 
     m_game_state.player->set_position(glm::vec3(0.0f, -1.5f, 0.0f));
-    m_game_state.player->set_scale(glm::vec3(1.0f, 1.5f, 0.0f));
+    m_game_state.player->set_scale(glm::vec3(1.0f, 1.0f, 0.0f));
     m_game_state.player->set_animation_indices(ship_animation_indices);
     m_game_state.player->set_animation_cols(3);
     m_game_state.player->set_animation_rows(1);
@@ -132,7 +132,7 @@ void Level2Scene::initialise()
     // Guard AI
     glm::vec3 guard_positions[] = {
         glm::vec3(-3.0f, 2.5f, 0.0f),
-        glm::vec3(3.0f, 0.0f, 0.0f)
+        glm::vec3(3.0f, 1.0f, 0.0f)
     };
     for (int i = 0; i < 2; i++) {
         int idx = 3 + i;
@@ -150,30 +150,38 @@ void Level2Scene::initialise()
     }
 
     // Chaser AI
-    m_game_state.enemies[5].set_texture_id(flyer_texture_id);
-    m_game_state.enemies[5].set_ai_type(CHASER);
-    m_game_state.enemies[5].set_position(glm::vec3(-6.0f, 3.5f, 0.0f));
-    m_game_state.enemies[5].set_scale(glm::vec3(1.0f));
-    m_game_state.enemies[5].set_speed(3.0f);
-    m_game_state.enemies[5].set_animation_indices(flyer_animation_indices);
-    m_game_state.enemies[5].set_animation_cols(5);
-    m_game_state.enemies[5].set_animation_rows(1);
-    m_game_state.enemies[5].set_animation_frames(5);
-    m_game_state.enemies[5].set_animation_index(0);
-    m_game_state.enemies[5].set_animation_time(0.0f);
+    glm::vec3 chaser_positions[] = {
+        glm::vec3(-6.0f, 3.5f, 0.0f),
+        glm::vec3(6.0f, 2.0f, 0.0f)
+    };
+
+    for (int i = 0; i < 2; i++) {
+        int idx = 5 + i;
+        m_game_state.enemies[idx].set_texture_id(flyer_texture_id);
+        m_game_state.enemies[idx].set_ai_type(CHASER);
+        m_game_state.enemies[idx].set_position(chaser_positions[i]);
+        m_game_state.enemies[idx].set_scale(glm::vec3(1.0f));
+        m_game_state.enemies[idx].set_speed(3.0f);
+        m_game_state.enemies[idx].set_animation_indices(flyer_animation_indices);
+        m_game_state.enemies[idx].set_animation_cols(5);
+        m_game_state.enemies[idx].set_animation_rows(1);
+        m_game_state.enemies[idx].set_animation_frames(5);
+        m_game_state.enemies[idx].set_animation_index(0);
+        m_game_state.enemies[idx].set_animation_time(0.0f);
+    }
 
     // Zigzag AI
-    m_game_state.enemies[6].set_texture_id(flyer_texture_id);
-    m_game_state.enemies[6].set_ai_type(ZIGZAG);
-    m_game_state.enemies[6].set_position(glm::vec3(0.0f, 1.0f, 0.0f));
-    m_game_state.enemies[6].set_scale(glm::vec3(1.0f));
-    m_game_state.enemies[6].set_speed(3.5f);
-    m_game_state.enemies[6].set_animation_indices(flyer_animation_indices);
-    m_game_state.enemies[6].set_animation_cols(5);
-    m_game_state.enemies[6].set_animation_rows(1);
-    m_game_state.enemies[6].set_animation_frames(5);
-    m_game_state.enemies[6].set_animation_index(0);
-    m_game_state.enemies[6].set_animation_time(0.0f);
+    m_game_state.enemies[7].set_texture_id(flyer_texture_id);
+    m_game_state.enemies[7].set_ai_type(ZIGZAG);
+    m_game_state.enemies[7].set_position(glm::vec3(0.0f, 3.0f, 0.0f));
+    m_game_state.enemies[7].set_scale(glm::vec3(1.0f));
+    m_game_state.enemies[7].set_speed(3.5f);
+    m_game_state.enemies[7].set_animation_indices(flyer_animation_indices);
+    m_game_state.enemies[7].set_animation_cols(5);
+    m_game_state.enemies[7].set_animation_rows(1);
+    m_game_state.enemies[7].set_animation_frames(5);
+    m_game_state.enemies[7].set_animation_index(0);
+    m_game_state.enemies[7].set_animation_time(0.0f);
 
 
     // Audio setup
@@ -266,7 +274,17 @@ void Level2Scene::update(float delta_time)
 
 void Level2Scene::render(ShaderProgram* program)
 {
+    GLuint shader_program_id = program->get_program_id();
+    glUseProgram(shader_program_id);
+    GLint tint_location = glGetUniformLocation(shader_program_id, "healthTintAmount");
+
+    glUniform1f(tint_location, 0.0f);
     Utility::draw_background(program, m_game_state.bg_texture_id, 50.0f, 50.0f);
+
+
+    float tint = 1.0f - (static_cast<float>(lives) / 3.0f);  // Adjust denominator if max lives ≠ 3
+
+    glUniform1f(tint_location, tint);
 
     m_game_state.player->render(program);
 
@@ -275,6 +293,7 @@ void Level2Scene::render(ShaderProgram* program)
         m_game_state.beam->render(program);
     }
 
+    glUniform1f(tint_location, 0.0f);
     for (int i = 0; i < ENEMY_COUNT; i++)
     {
         if (m_game_state.enemies[i].is_active())

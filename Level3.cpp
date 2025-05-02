@@ -1,4 +1,4 @@
-/**
+﻿/**
 * Author: Edrick Linardi
 * Assignment: Space Blaster
 * Date due: 2025-05-02, 2:00pm
@@ -64,7 +64,7 @@ void Level3Scene::initialise()
     );
 
     m_game_state.player->set_position(glm::vec3(0.0f, -5.0f, 0.0f));
-    m_game_state.player->set_scale(glm::vec3(1.0f, 1.5f, 0.0f));
+    m_game_state.player->set_scale(glm::vec3(1.0f, 1.0f, 0.0f));
     m_game_state.player->set_animation_indices(ship_animation_indices);
     m_game_state.player->set_animation_cols(3);
     m_game_state.player->set_animation_rows(1);
@@ -298,7 +298,17 @@ void Level3Scene::update(float delta_time)
 
 void Level3Scene::render(ShaderProgram* program)
 {
+    GLuint shader_program_id = program->get_program_id();
+    glUseProgram(shader_program_id);
+    GLint tint_location = glGetUniformLocation(shader_program_id, "healthTintAmount");
+
+    glUniform1f(tint_location, 0.0f);
     Utility::draw_background(program, m_game_state.bg_texture_id, 50.0f, 50.0f);
+
+
+    float tint = 1.0f - (static_cast<float>(lives) / 3.0f);  // Adjust denominator if max lives ≠ 3
+
+    glUniform1f(tint_location, tint);
 
     m_game_state.player->render(program);
 
@@ -307,6 +317,7 @@ void Level3Scene::render(ShaderProgram* program)
         m_game_state.beam->render(program);
     }
 
+    glUniform1f(tint_location, 0.0f);
     for (int i = 0; i < ENEMY_COUNT; i++)
     {
         if (m_game_state.enemies[i].is_active())

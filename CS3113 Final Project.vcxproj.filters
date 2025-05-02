@@ -37,6 +37,9 @@
     <ClCompile Include="WinScene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Effects.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Entity.h">
@@ -70,6 +73,9 @@
       <Filter>Header FIles</Filter>
     </ClInclude>
     <ClInclude Include="WinScene.h">
+      <Filter>Header FIles</Filter>
+    </ClInclude>
+    <ClInclude Include="Effects.h">
       <Filter>Header FIles</Filter>
     </ClInclude>
   </ItemGroup>

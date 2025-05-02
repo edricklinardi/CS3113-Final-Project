@@ -35,6 +35,6 @@ void WinScene::render(ShaderProgram* program) {
     glm::mat4 ui_view_matrix = glm::mat4(1.0f); // Reset view matrix
     program->set_view_matrix(ui_view_matrix);
 
-    Utility::draw_text(program, m_font_texture_id, "Congratulations! You WIN!", 0.3f, 0.01f, glm::vec3(-3.75f, 0.0f, 0));
-    Utility::draw_text(program, m_font_texture_id, "Press R to restart", 0.3f, 0.01f, glm::vec3(-2.75f, -0.5f, 0));
+    Utility::draw_text(program, m_font_texture_id, "Congratulations! You WIN!", 0.35f, 0.01f, glm::vec3(-4.25f, 0.0f, 0));
+    Utility::draw_text(program, m_font_texture_id, "Press R to restart", 0.3f, 0.01f, glm::vec3(-2.6f, -0.5f, 0));
 }

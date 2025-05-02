@@ -67,7 +67,7 @@ void Level1Scene::initialise()
     );
 
     m_game_state.player->set_position(glm::vec3(0.0f, -1.5f, 0.0f));
-	m_game_state.player->set_scale(glm::vec3(1.0f, 1.5f, 0.0f));
+	m_game_state.player->set_scale(glm::vec3(1.0f, 1.0f, 0.0f));
     m_game_state.player->set_animation_indices(ship_animation_indices);
     m_game_state.player->set_animation_cols(3);
     m_game_state.player->set_animation_rows(1);
@@ -112,6 +112,7 @@ void Level1Scene::initialise()
         m_game_state.enemies[i].activate();
     }
 
+    // Guard AI
     m_game_state.enemies[0].set_texture_id(guard_texture_id);
 	m_game_state.enemies[0].set_ai_type(GUARD);
 	m_game_state.enemies[0].set_position(glm::vec3(0.0f, 2.5f, 0.0f));
@@ -123,28 +124,51 @@ void Level1Scene::initialise()
     m_game_state.enemies[0].set_animation_index(0);
     m_game_state.enemies[0].set_animation_time(0.0f);
 
-    m_game_state.enemies[1].set_ai_type(GUARD);
-    m_game_state.enemies[1].set_position(glm::vec3(4.0f, 0.0f, 0.0f));
-    m_game_state.enemies[1].set_scale(glm::vec3(1.0f, 1.0f, 0.0f));
-	m_game_state.enemies[1].set_speed(2.5f);
-    m_game_state.enemies[1].set_animation_indices(guard_animation_indices);
-    m_game_state.enemies[1].set_animation_cols(4);
-    m_game_state.enemies[1].set_animation_rows(1);
-    m_game_state.enemies[1].set_animation_frames(4);
-    m_game_state.enemies[1].set_animation_index(0);
-    m_game_state.enemies[1].set_animation_time(0.0f);
+    // Walker AI
+    glm::vec3 walker_positions[] = {
+    glm::vec3(-3.5f, -1.0f, 0.0f),
+    glm::vec3(2.5f, 1.0f, 0.0f)
+    };
+    for (int i = 0; i < 2; i++) {
+        int idx = 1 + i;
+        m_game_state.enemies[idx].set_texture_id(walker_texture_id);
+        m_game_state.enemies[idx].set_ai_type(WALKER);
+        m_game_state.enemies[idx].set_position(walker_positions[i]);
+        m_game_state.enemies[idx].set_scale(glm::vec3(1.0f));
+        m_game_state.enemies[idx].set_speed(3.5f);
+        m_game_state.enemies[idx].set_animation_indices(walker_animation_indices);
+        m_game_state.enemies[idx].set_animation_cols(6);
+        m_game_state.enemies[idx].set_animation_rows(1);
+        m_game_state.enemies[idx].set_animation_frames(6);
+        m_game_state.enemies[idx].set_animation_index(0);
+        m_game_state.enemies[idx].set_animation_time(0.0f);
+    }
 
-	m_game_state.enemies[2].set_texture_id(walker_texture_id);
-    m_game_state.enemies[2].set_ai_type(WALKER);
-    m_game_state.enemies[2].set_position(glm::vec3(-3.0f, -0.5f, 0.0f));
-    m_game_state.enemies[2].set_scale(glm::vec3(1.0f, 1.0f, 0.0f));
-    m_game_state.enemies[2].set_speed(4.0f);
-    m_game_state.enemies[2].set_animation_indices(walker_animation_indices);
-    m_game_state.enemies[2].set_animation_cols(6);
-    m_game_state.enemies[2].set_animation_rows(1);
-    m_game_state.enemies[2].set_animation_frames(6);
-    m_game_state.enemies[2].set_animation_index(0);
-    m_game_state.enemies[2].set_animation_time(0.0f);
+	// Zigzag AI
+	m_game_state.enemies[3].set_texture_id(walker_texture_id);
+    m_game_state.enemies[3].set_ai_type(ZIGZAG);
+    m_game_state.enemies[3].set_position(glm::vec3(3.0f, -0.5f, 0.0f));
+    m_game_state.enemies[3].set_scale(glm::vec3(1.0f, 1.0f, 0.0f));
+    m_game_state.enemies[3].set_speed(4.0f);
+    m_game_state.enemies[3].set_animation_indices(walker_animation_indices);
+    m_game_state.enemies[3].set_animation_cols(6);
+    m_game_state.enemies[3].set_animation_rows(1);
+    m_game_state.enemies[3].set_animation_frames(6);
+    m_game_state.enemies[3].set_animation_index(0);
+    m_game_state.enemies[3].set_animation_time(0.0f);
+
+    // Chaser AI
+    m_game_state.enemies[4].set_texture_id(guard_texture_id);
+    m_game_state.enemies[4].set_ai_type(CHASER);
+    m_game_state.enemies[4].set_position(glm::vec3(5.0f, 5.0f, 0.0f));
+    m_game_state.enemies[4].set_scale(glm::vec3(1.0f, 1.0f, 0.0f));
+    m_game_state.enemies[4].set_speed(2.5f);
+    m_game_state.enemies[4].set_animation_indices(guard_animation_indices);
+    m_game_state.enemies[4].set_animation_cols(4);
+    m_game_state.enemies[4].set_animation_rows(1);
+    m_game_state.enemies[4].set_animation_frames(4);
+    m_game_state.enemies[4].set_animation_index(0);
+    m_game_state.enemies[4].set_animation_time(0.0f);
 
     // Audio setup
     Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 4096);
@@ -236,7 +260,17 @@ void Level1Scene::update(float delta_time)
 
 void Level1Scene::render(ShaderProgram* program)
 {
+    GLuint shader_program_id = program->get_program_id();
+    glUseProgram(shader_program_id);
+    GLint tint_location = glGetUniformLocation(shader_program_id, "healthTintAmount");
+
+    glUniform1f(tint_location, 0.0f);
     Utility::draw_background(program, m_game_state.bg_texture_id, 50.0f, 50.0f);
+
+
+    float tint = 1.0f - (static_cast<float>(lives) / 3.0f);  // Adjust denominator if max lives ≠ 3
+
+    glUniform1f(tint_location, tint);
 
     m_game_state.player->render(program);
 
@@ -245,6 +279,7 @@ void Level1Scene::render(ShaderProgram* program)
         m_game_state.beam->render(program);
     }
 
+    glUniform1f(tint_location, 0.0f);
     for (int i = 0; i < ENEMY_COUNT; i++) 
     {
         if (m_game_state.enemies[i].is_active()) 
